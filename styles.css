@@ -1,0 +1,112 @@
+/* 🌈 Global background */
+
+
+body {
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    font-size: 14px;
+}
+
+/* Hide Streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* 🔷 Main container spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* 🧠 App Title */
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #4f46e5, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+
+/* 📦 Glass card */
+.card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+/* 📘 Answer box */
+.answer {
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #111827;
+}
+
+/* 🎯 Buttons */
+.stButton button {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-radius: 2px;
+    border: none;
+    padding: 3px 5px;
+    font-weight: 300;
+    transition: all 0.2s ease;
+    font-size: 5px;
+}
+
+.stButton button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+}
+
+/* 🔍 Input box */
+.stTextInput input {
+    border-radius: 12px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    transition: 0.2s;
+    font-size: 13px;
+}
+
+.stTextInput input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+}
+
+/* 📜 Expander */
+.streamlit-expanderHeader {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* 🎧 Audio player */
+audio {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* ✨ Smooth fade animation */
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

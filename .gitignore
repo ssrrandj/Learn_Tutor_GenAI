@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+vector_db/
+data/
+ENV_learn1/
+venv/
+env/
+*.log
+books//
+
+storage/
+*.json
