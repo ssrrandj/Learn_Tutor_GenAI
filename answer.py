@@ -1,141 +1,87 @@
 from groq import Groq
+import os
 
-client = Groq(api_key="api_key")
+# Logic: Use an environment variable or a direct key. 
+# In app.py, we should ideally pass this or set it globally.
+client = Groq(api_key="")
 
 def get_model():
-     models = client.models.list().data
-     print("model from answer.py",models)
+    """
+    Contract: Returns the latest supported Llama model on Groq.
+    Updated: Replaced decommissioned llama3-70b-8192 with llama-3.3-70b-versatile.
+    """
+    # Llama 3.3 70B is the direct current successor for high-quality tutoring.
+    return "llama-3.3-70b-versatile" 
 
-     for m in models:
-         if "llama-3" in m.id.lower() or "llama-4" in m.id.lower():
-             return m.id
-     return None
-    
-
-     #return next((m.id for m in models if "llama" in m.id.lower())
-      #           , None)
-models_check = client.models.list().data
-print("Available Models:")
-for m in models_check:
-     print(m.id)
-
-
-    
-
-    #return "llama-3.3-8b-instant"
-   
-
-     """for m in models:
-        if "llama" in m.id.lower():
-            return m.id
-        
-        return "llama3-8b-8192"""
-    
-
-def build_context(chunks, max_chunks=800):
-    
+def build_context(chunks, max_chars=4000):
+    """
+    Contract: Merges retrieved textbook chunks into a single string.
+    """
     context = ""
-
     for c in chunks:
-         #if len(context)  + len(c) > max_chunks:
-             #break
-         chunk_part = c[:200]
-
-         if len(context) + len(chunk_part) > max_chunks:
-             break
-         context += chunk_part + "\n\n"
-
+        if len(context) + len(c) > max_chars:
+            break
+        context += f"[Textbook Segment]:\n{c}\n\n---\n\n"
     return context
 
-
-
 def generate_answer(chunks, question):
-
+    """
+    Contract: Generates a factual answer based ONLY on textbook context.
+    """
     if not chunks:
-        return "I can not find this in the book."
+        return "I'm sorry, I couldn't find any specific information about that in the uploaded textbook."
+
     context = build_context(chunks)
-
-    print("Final context length:", len(context) )
-
-    #context = "\n\n".join(chunks[:4])
-    #trimmed_chunks = [c[:500] for c in chunks[:4]]
-    #context = "\n\n".join(trimmed_chunks)
-#    Use ONLY the book content.
-#Combine all relevant parts.
-#Show key content
-#2. Explain simply
-
-
-    prompt = f"""
-You are a helpfull teacher.
-
-Use the book content below to answer.
-
-If exact answer is not found, try to explain based on available content
-
-Content:
-{context}
-
-Question:
-{question}
-
-Answer:
-
-1. Key points
-2. Simple explanation 
-"""
-    print("printing prompt to chekc what it is feeding:topic.py", prompt)
-    response = client.chat.completions.create(
-        model=get_model(),
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
+    
+    # Logic: High-instruction prompt to ensure 'Silo' integrity
+    system_prompt = (
+        "You are an expert academic tutor. Use the provided textbook context to answer the student's question. "
+        "If the answer is not in the context, say you don't know based on the book. "
+        "Keep the tone encouraging and clear."
     )
+    
+    user_prompt = f"Textbook Context:\n{context}\n\nStudent Question: {question}"
 
-    print("chunks:", len(chunks))
+    try:
+        response = client.chat.completions.create(
+            model=get_model(),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.2 # Lower temperature = more factual/less creative
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error generating answer: {str(e)}"
 
-    #print("Sample chunk:", chunks[0] if chunks else "No chunks")
-
-    return response.choices[0].message.content
-
-
-def generate_quiz(chunks, question):
-
-    context = "\n".join(chunks[:2])
-
-    print("Quiz context input length:", len(context))
-
+def generate_quiz(chunks, topic):
+    """
+    Contract: Generates a quiz from the specific chapter context.
+    """
+    context = build_context(chunks[:3]) # Use a bit more context for better questions
+    
     prompt = f"""
-Create ONLY or Maximum 5 MCQs based STRICTLY on the question below.
-
-Question:
-{question}
-
-Context:
-{context}
-
-Rules:
-- Questions MUST be ONLY about the question topic
-- DO NOT include other topics
-- DO NOT ask about other rhymes
-- Keep questions SHORT
-- DO NOT ask to "write full rhyme"
-- Focus on meaning, facts, or small details
-
-Output format:
-1. Question?
-A) ...
-B) ...
-C) ...
-D) ...
-Answer: ...
-"""
-    print("promtp input to llm:", prompt)
-    response = client.chat.completions.create(
-        model=get_model(),
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
-
-
-
-    return response.choices[0].message.content
+    Based on the following textbook context, create 3-5 multiple-choice questions for the topic: {topic}.
+    
+    Context:
+    {context}
+    
+    Format:
+    Q1: [Question]
+    A) [Option]
+    B) [Option]
+    C) [Option]
+    D) [Option]
+    Correct Answer: [Letter]
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model=get_model(),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error generating quiz: {str(e)}"

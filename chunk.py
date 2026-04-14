@@ -1,30 +1,47 @@
 import re
 from langchain_community.vectorstores import Chroma
 from embedding import get_embeddings
+import os
+import re
+from llama_index.core import StorageContext, load_index_from_storage
 
 def load_existing_chunks(db_path):
-
-    db = Chroma(
-        persist_directory=db_path,
-        embedding_function=get_embeddings()
-    )
-
-    data = db.get()
-
-    chunks = data.get("documents", [])
-
-    return chunks
+    if not os.path.exists(os.path.join(db_path, "docstore.json")):
+        return []
+    
+    storage_context = StorageContext.from_defaults(persist_dir=db_path)
+    index = load_index_from_storage(storage_context)
+    
+    # Access the nodes directly from the LlamaIndex docstore
+    nodes = index.storage_context.docstore.docs.values()
+    return [node.get_content() for node in nodes]
 
 def dynamic_chunking(docs):
     chunks = []
-
     for d in docs:
-        parts = d.page_content.split("\n\n")
+        # LlamaIndex Document objects use .text
+        content = d.text if hasattr(d, 'text') else getattr(d, 'page_content', "")
+        parts = content.split("\n\n")
         chunks.extend(parts)
 
-    return [c.strip() for c in chunks if len(c) > 50]
+    return [c.strip() for c in chunks if len(c.strip()) > 50]
 
-
+def extract_topics(chunks):
+    from collections import Counter
+    candidates = []
+    for c in chunks:
+        text = re.sub(r'\s+', ' ', c.strip())
+        words = text.split()
+        if 1 < len(words) <= 12:
+            if text.istitle() or text.isupper() or len(words) <= 6:
+                candidates.append(text)
+    
+    freq = Counter(candidates)
+    topics = [t for t, count in freq.items() if count >= 2]
+    if not topics:
+        topics = list(freq.keys())
+    
+    return list(dict.fromkeys(topics))[:8]
 # def extract_topics(chunks):
 
 #     from collections import Counter
@@ -94,38 +111,3 @@ def dynamic_chunking(docs):
 #     topics = response.choices[0].message.content.split("\n")
 
 #     return [t.strip("- ").strip() for t in topics if t.strip()]
-
-def extract_topics(chunks):
-
-    from collections import Counter
-    import re
-
-    candidates = []
-
-    for c in chunks:
-        text = c.strip()
-        text = re.sub(r'\s+', ' ', text)
-
-        words = text.split()
-
-        if len(words) > 12:
-            continue
-
-        if any(x in text.lower() for x in ["http", "www", ".com"]):
-            continue
-
-        if text.istitle() or text.isupper() or len(words) <= 6:
-            candidates.append(text)
-
-    freq = Counter(candidates)
-
-    topics = [t for t, count in freq.items() if count >= 2]
-
-    if not topics:
-        topics = list(freq.keys())
-
-    topics = list(dict.fromkeys(topics))
-
-    print("Extract_topic from gere chunks.py", len(topics))
-
-    return topics[:8]
