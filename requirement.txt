@@ -10,3 +10,6 @@ python-dotenv
 rank_bm25
 gtts
 phi3
+llama parser
+OCR
+Groq

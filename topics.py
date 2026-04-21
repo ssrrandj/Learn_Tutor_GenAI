@@ -4,7 +4,7 @@ from groq import Groq
 from answer import get_model, build_context
 
 # Initialize Groq Client
-client = Groq(api_key="")
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 @st.cache_data
 def extract_topics(chunks):

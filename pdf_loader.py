@@ -1,6 +1,9 @@
 import os
 from llama_parse import LlamaParse
 from llama_index.core import SimpleDirectoryReader
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def load_document(file_path, is_academic=True):
     """
@@ -18,7 +21,7 @@ def load_document(file_path, is_academic=True):
         print("🔍 Mode: Academic (LlamaParse OCR)")
         # 1. Initialize LlamaParse
         parser = LlamaParse(
-            api_key="llx-RjALa7BlskzcaZnIbNDptGDY3Beg09IkRl0hhodLrWkUUlNL", 
+            api_key=os.getenv("LLAMA_CLOUD_API_KEY"), 
             result_type="markdown",
             num_workers=4,
             verbose=True,

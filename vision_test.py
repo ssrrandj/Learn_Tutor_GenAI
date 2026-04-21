@@ -8,6 +8,9 @@ from pdf2image import convert_from_path # Essential import for PDF conversion
 import sys
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # 1. FORCE THE PATH (Maintained from your working version)
 site_pkg_path = r"C:\GenAI\Learn_APP_F\ENV_learn1\Lib\site-packages" 
@@ -21,7 +24,8 @@ def run_vision_test(pdf_path=None, index_page=None):
     """
     
     # --- CONFIGURATION ---
-    GEMINI_API_KEY = ""
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    #GEMINI_API_KEY = "AIzaSyCAWhZwo8m9yIxfv5CiuC43o5FsQxdV9Cs"
     POPPLER_PATH = r"C:\poppler\poppler-25.12.0\Library\bin" 
     
     # Fallback to hardcoded values only if app.py doesn't provide them
@@ -62,7 +66,7 @@ def run_vision_test(pdf_path=None, index_page=None):
             print(f"Trying model: {model_name}...")
             response = client.models.generate_content(
                 model=model_name,
-                contents=["List every chapter title from this image exactly. No page numbers.", img]
+                contents=["List every chapter or index title from this image exactly. No page numbers.", img]
             )
             print(f"\n SUCCESS WITH {model_name}!")
             return response.text.strip() 
